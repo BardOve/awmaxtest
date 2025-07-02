@@ -91,12 +91,50 @@
     <div id="loadingIndicator" style="display: none;">Generating chart, please wait...</div>
     <div id="chartContainer"></div>
 
+    <button id="generatePDF">Generate PDF </button>
 
 
-    <!-- The JavaScript that makes the request -->
+    <!-- The JavaScripts that makes the requests -->
     <script>
         const userEmail = "{{ .userEmail }}";
         const userName = "{{ .userName }}";
+
+        async function generatepdf(){
+            const button = document.getElementById('generatePDF');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            button.disabled = true;
+            loadingIndicator.style.display = 'block';
+            try {
+                const response = await fetch('/generatepfd', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: userEmail, name: userName }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('PDF generated successfully.');
+                } else {
+                    alert(`Failed to generate PDF: ${result.error}`);
+                }
+
+            } catch (error) {
+                console.error('Fetch error:', error);
+                alert('An error occurred while generating the PDF. Check the console for details.');
+            } finally {
+                button.disabled = false;
+                loadingIndicator.style.display = 'none';
+            }
+        }
+        document.getElementById('generatePDF').addEventListener('click', generatepdf);
 
         async function generateMeasurement() {
             const button = document.getElementById('generateMeasurementButton');

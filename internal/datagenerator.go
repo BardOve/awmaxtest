@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func GenerateData() error {
+func GenerateData(user string, email string) error {
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	number := r.Float64() * 30

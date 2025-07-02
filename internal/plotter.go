@@ -15,6 +15,7 @@ import (
 	"time"
 )
 
+var sensorFilePath = "./internal/data/input.json"
 
 type InputData []struct {
 	Time   float64 `json:"time"`
@@ -24,15 +25,15 @@ type InputData []struct {
 
 func GetData(filepath string) (InputData, error) {
 	
+	var dataFromFile InputData
+
 	inputBytes, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil,	err
 	}
 
-	var inputData InputData
-
-	json.Unmarshal(inputBytes, &inputData)
-	return inputData, nil
+	json.Unmarshal(inputBytes, &dataFromFile)
+	return dataFromFile, nil
 }
 
 func GenerateChartHandler(c *gin.Context) {
@@ -47,10 +48,8 @@ func GenerateChartHandler(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Received request to generate chart for: %s (%s)", req.Name, req.Email)
+	sensorData, err := GetData(sensorFilePath)
 
-
-	sensorData, err := GetData("./internal/data/input.json")
 	if err != nil {
 		log.Printf("Error getting data: %v", err)
 		c.JSON(500, gin.H{"success": false, "error": "Could not load sensor data"})
@@ -63,8 +62,8 @@ func GenerateChartHandler(c *gin.Context) {
 		return
 	}
 
-	// After creating the chart, read the directory to find all charts for this user.
 	chartDir := fmt.Sprintf("./charts/%s", req.Name)
+
 	files, err := os.ReadDir(chartDir)
 	if err != nil {
 		log.Printf("Error reading chart directory: %v", err)
@@ -136,6 +135,7 @@ func CreateChart(data InputData, name string, excercise string) error {
 	if err := p.Save(10*vg.Inch, 4*vg.Inch, filename); err != nil {
 		return fmt.Errorf("failed to save chart: %w", err)
 	}
+	os.Rename(sensorFilePath, fmt.Sprintf("./charts/%s/%s_%s_%s.json", name, name, excercise, date))
 
 	log.Printf("Chart '%s' created successfully.", filename)
 	return nil
